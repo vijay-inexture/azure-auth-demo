@@ -1,0 +1,21 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          azure:
+            client-id: d3fa5a1b-9606-469a-931c-b6b0d06a9522
+            client-secret: xiv8Q~2MjHUZj_2ZJekfRHctFrFj4nfaR0pxob~4
+            client-name: Azure
+            redirect-uri: http://localhost:8080/login/oauth2/code/
+            scope: openid,email, profile, offline_access
+        provider:
+          azure:
+            authorization-uri: https://login.microsoftonline.com/a40ee758-1021-4d42-b0f0-f4f554472af6/oauth2/v2.0/authorize
+            token-uri: https://login.microsoftonline.com/a40ee758-1021-4d42-b0f0-f4f554472af6/oauth2/v2.0/token
+            jwk-set-uri: https://login.microsoftonline.com/a40ee758-1021-4d42-b0f0-f4f554472af6/discovery/v2.0/keys
+            user-info-uri: https://graph.microsoft.com/oidc/userinfo
+            issuer-uri: https://login.microsoftonline.com/a40ee758-1021-4d42-b0f0-f4f554472af6/v2.0
+            user-name-attribute: name
+
+
