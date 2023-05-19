@@ -17,5 +17,13 @@ spring:
             user-info-uri: https://graph.microsoft.com/oidc/userinfo
             issuer-uri: https://login.microsoftonline.com/a40ee758-1021-4d42-b0f0-f4f554472af6/v2.0
             user-name-attribute: name
-
+  datasource:
+    url: jdbc:postgresql://localhost:5432/azure_auth?currentSchema=auth_db
+    username: 'postgres'
+    password: 'test123'
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update
 

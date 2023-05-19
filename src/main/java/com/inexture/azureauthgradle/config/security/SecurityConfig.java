@@ -19,11 +19,6 @@ public class SecurityConfig{
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http
-//        	.authorizeHttpRequests()
-              //  .addFilterBefore(customFilter(), OAuth2LoginAuthenticationFilter.class)
-//                .authorizeRequests()
-               // .antMatchers("/").permitAll()
         	 http
          		.authorizeHttpRequests()
                 .anyRequest().authenticated()
@@ -39,25 +34,6 @@ public class SecurityConfig{
                 .deleteCookies("JSESSIONID");
         return http.build();
     }
-
-//    private AuthenticationSuccessHandler oauth2SuccessHandler() {
-//        return (request, response, authentication) -> {
-//            // Handle successful authentication
-//            // Retrieve the access token and refresh token from the authentication object
-//            System.out.println("success");
-//            OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-//            OAuth2AuthorizedClient client = clientService.loadAuthorizedClient(
-//                    oauthToken.getAuthorizedClientRegistrationId(), oauthToken.getName());
-//
-//            String accessToken = client.getAccessToken().getTokenValue();
-//            String refreshToken = client.getRefreshToken().getTokenValue();
-//            System.out.println("success="+refreshToken);
-//            HttpSession session = request.getSession();
-//            session.setAttribute("accessToken", accessToken);
-//            session.setAttribute("refreshToken", refreshToken);
-//            response.sendRedirect("/");
-//        };
-//    }
 
     public LogoutSuccessHandler azureAdLogoutHandler() {
         return (request, response, authentication) -> {
