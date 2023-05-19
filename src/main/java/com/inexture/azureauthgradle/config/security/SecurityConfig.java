@@ -19,19 +19,18 @@ public class SecurityConfig{
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        	 http
-         		.authorizeHttpRequests()
+        http
+                .authorizeHttpRequests()
                 .anyRequest().authenticated()
                 .and()
-                .oauth2Login()
-                .successHandler(customAuthSuccessHandler)
-                .and()
-                .logout()
-                .logoutUrl("/logout")
-                .logoutSuccessHandler(azureAdLogoutHandler())
-                .invalidateHttpSession(true)
-                .clearAuthentication(true)
-                .deleteCookies("JSESSIONID");
+                .oauth2Login(login -> login
+                        .successHandler(customAuthSuccessHandler))
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessHandler(azureAdLogoutHandler())
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .deleteCookies("JSESSIONID"));
         return http.build();
     }
 

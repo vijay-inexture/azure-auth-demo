@@ -2,10 +2,14 @@ package com.inexture.azureauthgradle.config.security;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -43,23 +47,18 @@ public class CustomAuthSuccessHandler  implements AuthenticationSuccessHandler {
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
         OAuth2AuthorizedClient client = clientService.loadAuthorizedClient(
                 oauthToken.getAuthorizedClientRegistrationId(), oauthToken.getName());
-        
 
-        OAuth2AuthenticatedPrincipal principal = oauthToken.getPrincipal();
-        String email = "";
-        if (principal instanceof DefaultOAuth2User) {
-            DefaultOAuth2User oauth2User = (DefaultOAuth2User) principal;
-            email = oauth2User.getAttribute("preferred_username");
-        }
-        System.out.println("user="+email);
+        OAuth2AuthenticatedPrincipal principal = oauthToken.getPrincipal();        
+        String email = principal.getAttribute("preferred_username");
+        
+        List<String> roles = oauthToken.getAuthorities().stream()
+        .filter(authority ->  authority.getAuthority().startsWith("OIDC_") || authority.getAuthority().startsWith("ROLE_"))
+        .map(e-> e.getAuthority().split("_")[1])
+        .collect(Collectors.toList());
         
         String accessToken = client.getAccessToken().getTokenValue();
         String refreshToken = client.getRefreshToken().getTokenValue();
         long expiresAt = client.getAccessToken().getExpiresAt().toEpochMilli();
-        
-        System.out.println("accessToken="+accessToken);
-        System.out.println("refreshToken="+refreshToken);
-        System.out.println("expiredAt="+client.getAccessToken().getExpiresAt());
         
         Optional<User> optionalUser = userRepository.findByEmail(email);
         User user;
@@ -74,11 +73,6 @@ public class CustomAuthSuccessHandler  implements AuthenticationSuccessHandler {
     	user.setExpiresAt(expiresAt);
     	userRepository.save(user);
         
-        HttpSession session = request.getSession();
-        session.setAttribute("accessToken", accessToken);
-        session.setAttribute("refreshToken", refreshToken);
-
-
         response.sendRedirect("/");
 
     }
