@@ -13,9 +13,14 @@ public class DemoController {
 		return new ResponseEntity<String>("Welcome", HttpStatus.OK);
 	}
 	
-	@GetMapping("/home")
+	@GetMapping("/api/home")
 	public ResponseEntity<String> homepage(){
 		return new ResponseEntity<String>("Welcome to homepage", HttpStatus.OK);
+	}
+	
+	@GetMapping("/api/user1")
+	public ResponseEntity<String> userPage(){
+		return new ResponseEntity<String>("Welcome User", HttpStatus.OK);
 	}
 
 }

@@ -1,68 +1,79 @@
 package com.inexture.azureauthgradle.entity;
 
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
-@Entity(name="auth_user")
+
+@Data
+@Entity(name="USERS")
 public class User {
-	
-	@Id
-	@GeneratedValue
-	private Long id;
-	private String email;
-	@Column(columnDefinition = "text") 
-	private String accessToken;
-	@Column(columnDefinition = "text") 
-	private String refreshToken;
-	@Column(columnDefinition = "bigint")
-	private Long expiresAt;
-	
-	public User() {
-		super();
-	}
-	
-	public User(Long id, String accessToken, String refreshToken, Long expiresAt) {
-		super();
-		this.id = id;
-		this.accessToken = accessToken;
-		this.refreshToken = refreshToken;
-		this.expiresAt = expiresAt;
-	}
-	
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
-	public String getAccessToken() {
-		return accessToken;
-	}
-	public void setAccessToken(String accessToken) {
-		this.accessToken = accessToken;
-	}
-	public String getRefreshToken() {
-		return refreshToken;
-	}
-	public void setRefreshToken(String refreshToken) {
-		this.refreshToken = refreshToken;
-	}
-	
-	public Long getExpiresAt() {
-		return expiresAt;
-	}
-	public void setExpiresAt(Long expiresAt) {
-		this.expiresAt = expiresAt;
-	}
-	public String getEmail() {
-		return email;
-	}
-	public void setEmail(String email) {
-		this.email = email;
-	}
-	
-	
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(name="USER_ID")
+	private long userId;
+	
+	@Column(name="UUID")
+	private String uuid;
+	
+	@Column(name="EMAIL",unique = true, nullable = false)
+	@NotNull
+	private String email;
+	
+	@Column(name="PASSWORD")
+	private String password;
+	
+	@Column(name="FIRST_NAME")
+	private String firstName;
+	
+	@Column(name="LAST_NAME")
+	private String lastName;
+	
+	@Column(name="PHONE_NO")
+	private long phoneNo;
+	
+	@Column(name="LOCATION")
+	private String location;
+	
+	@Column(name="LANGUAGE")
+	private String language;
+	
+	@ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @JoinTable(name = "USER_ROLE",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles = new HashSet<>();
+	
+	@Column(name="CREATED_BY")
+	private String createdBy;
+	
+	@Column(name="UPDATED_BY")
+	private String updatedBy;
+	
+	@CreationTimestamp
+	@Column(name="CREATED_DATE",updatable = false)
+	private Date createdDate;
+	
+	@UpdateTimestamp
+	@Column(name="UPDATED_DATE")
+	private Date updatedDate;
+
+		
 }

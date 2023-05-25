@@ -2,37 +2,48 @@ package com.inexture.azureauthgradle.config.security;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.List;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
+import com.inexture.azureauthgradle.entity.Role;
 import com.inexture.azureauthgradle.entity.User;
+import com.inexture.azureauthgradle.entity.UserAuth;
+import com.inexture.azureauthgradle.repository.RoleRepository;
+import com.inexture.azureauthgradle.repository.UserAuthRepository;
 import com.inexture.azureauthgradle.repository.UserRepository;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 @Component
 public class CustomAuthSuccessHandler  implements AuthenticationSuccessHandler {
 	
+	static final Logger log = LoggerFactory.getLogger(CustomAuthSuccessHandler.class);
+	
+	@Autowired
+	private UserAuthRepository userAuthRepository;
+	
 	@Autowired
 	private UserRepository userRepository;
+	
+	@Autowired
+	private RoleRepository roleRepository;
 
     private final OAuth2AuthorizedClientService clientService;
 
@@ -40,7 +51,7 @@ public class CustomAuthSuccessHandler  implements AuthenticationSuccessHandler {
         this.clientService = clientService;
     }
 
-    @Override
+	@Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
 
@@ -51,31 +62,52 @@ public class CustomAuthSuccessHandler  implements AuthenticationSuccessHandler {
         OAuth2AuthenticatedPrincipal principal = oauthToken.getPrincipal();        
         String email = principal.getAttribute("preferred_username");
         
-        List<String> roles = oauthToken.getAuthorities().stream()
-        .filter(authority ->  authority.getAuthority().startsWith("OIDC_") || authority.getAuthority().startsWith("ROLE_"))
-        .map(e-> e.getAuthority().split("_")[1])
-        .collect(Collectors.toList());
+        Set<String> roles = oauthToken.getAuthorities().stream()
+                .filter(authority -> authority.getAuthority().startsWith("OIDC_") || authority.getAuthority().startsWith("ROLE_"))
+                .map(e -> e.getAuthority().split("_")[1])
+                .collect(Collectors.toSet());
+        log.info("roles:"+roles);        
+        
         
         String accessToken = client.getAccessToken().getTokenValue();
         String refreshToken = client.getRefreshToken().getTokenValue();
-        long expiresAt = client.getAccessToken().getExpiresAt().toEpochMilli();
-        
-        Optional<User> optionalUser = userRepository.findByEmail(email);
-        User user;
-        if(optionalUser.isPresent()) {
-        	user = optionalUser.get();	
-        }else {
-        	user = new User();
-        	user.setEmail(email);
-        }
-        user.setAccessToken(accessToken);
-    	user.setRefreshToken(refreshToken);
-    	user.setExpiresAt(expiresAt);
+        Instant expiresAt = client.getAccessToken().getExpiresAt();
+        Instant issuedAt = client.getAccessToken().getIssuedAt();
+
+    	Set<Role> rolesSet = new HashSet<>();
+    	roles.stream()
+        .filter(role -> !roleRepository.existsByRoleName(role))
+        .forEach(role -> {
+            Role roleEntity = new Role();
+            roleEntity.setRoleName(role);
+            roleEntity.setSocial(true);
+            roleEntity.setUuid(UUID.randomUUID().toString());
+            rolesSet.add(roleEntity);  
+        });
+    	
+    	Optional<User> optionalUser = userRepository.findByEmail(email);
+    	User user;
+    	if(optionalUser.isPresent()) {
+    		user = optionalUser.get();	
+    	}else {
+    		user = new User();
+    		user.setUuid(UUID.randomUUID().toString());
+    		user.setEmail(email);
+    	}
+    	user.getRoles().addAll(rolesSet);
     	userRepository.save(user);
-        
+    	
+    	UserAuth userAuth = new UserAuth();
+    	userAuth.setUserId(user.getUserId());
+        userAuth.setAccessToken(accessToken);
+        userAuth.setRefreshToken(refreshToken);
+        userAuth.setExpiresAt(Date.from(expiresAt));
+        userAuth.setIssuedAt(Date.from(issuedAt));
+        userAuth.setUuid(UUID.randomUUID().toString());
+    	userAuthRepository.save(userAuth);
+    
         response.sendRedirect("/");
 
     }
-
 
 }

@@ -5,11 +5,11 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.inexture.azureauthgradle.entity.User;
+import com.inexture.azureauthgradle.entity.UserAuth;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserAuthRepository extends JpaRepository<UserAuth, Long>{
 
-	Optional<User> findByEmail(String username);
+	boolean existsByAccessToken(String token);
 
 }
